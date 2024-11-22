@@ -9,6 +9,7 @@ import {
 } from "semantic-ui-react";
 import { Activity } from "../../../app/models/activity";
 import { observer } from "mobx-react-lite";
+import { format } from "date-fns";
 
 interface Props {
   activity: Activity;
@@ -33,7 +34,7 @@ export default observer(function ActivityListItem({ activity }: Props) {
       </Segment>
       <Segment>
         <span>
-          <Icon name="clock" /> {activity.date}
+          <Icon name="clock" /> {format(activity.date!, "dd MMM yyyy HH:mm")}
           <Icon name="marker" /> {activity.venue}
         </span>
       </Segment>
