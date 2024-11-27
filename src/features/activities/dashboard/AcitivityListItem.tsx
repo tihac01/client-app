@@ -3,13 +3,14 @@ import {
   Item,
   Button,
   Segment,
-  ItemGroup,
   ItemContent,
   Icon,
+  Label,
 } from "semantic-ui-react";
 import { Activity } from "../../../app/models/activity";
 import { observer } from "mobx-react-lite";
 import { format } from "date-fns";
+import ActivityListItemAttendee from "./ActivityListItemAttendee";
 
 interface Props {
   activity: Activity;
@@ -19,18 +20,47 @@ export default observer(function ActivityListItem({ activity }: Props) {
   return (
     <Segment.Group>
       <Segment>
-        <ItemGroup>
+        {activity.isCanceled && (
+          <Label
+            attached="top"
+            style={{ textAlign: "center" }}
+            ribbon
+            color="red"
+            content="Canceled"
+          />
+        )}
+        <Item.Group>
           <Item>
-            <Item.Image size="tiny" circular src="/assets/user.png" />
+            <Item.Image
+              style={{ marginBottom: 3 }}
+              size="tiny"
+              circular
+              src="/assets/user.png"
+            />
             <ItemContent>
-              <Item.Header
-                as={Link}
-                to={`/activities/${activity.id}`}
-              ></Item.Header>
-              <Item.Description>Hosted by Bob</Item.Description>
+              <Item.Header as={Link} to={`/activities/${activity.id}`}>
+                {activity.title}
+              </Item.Header>
+              <Item.Description>
+                Hosted by {activity.host?.displayName}
+              </Item.Description>
+              {activity.isHost && (
+                <Item.Description>
+                  <Label basic color="orange">
+                    Hosting
+                  </Label>
+                </Item.Description>
+              )}
+              {activity.isGoing && !activity.isHost && (
+                <Item.Description>
+                  <Label basic color="green">
+                    Going
+                  </Label>
+                </Item.Description>
+              )}
             </ItemContent>
           </Item>
-        </ItemGroup>
+        </Item.Group>
       </Segment>
       <Segment>
         <span>
@@ -38,7 +68,9 @@ export default observer(function ActivityListItem({ activity }: Props) {
           <Icon name="marker" /> {activity.venue}
         </span>
       </Segment>
-      <Segment secondary>Atendees go here</Segment>
+      <Segment secondary>
+        <ActivityListItemAttendee attendees={activity.attendees!} />
+      </Segment>
       <Segment clearing>
         <span>{activity.description}</span>
         <Button
