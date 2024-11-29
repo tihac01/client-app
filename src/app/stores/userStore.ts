@@ -43,4 +43,8 @@ export default class UserStore{
         const user = await agent.Account.current()
         runInAction(() => this.user = user)
     }
+
+    setImage = (image: string) => {
+        if (this.user)  this.user.image = image;
+    }
 } 
