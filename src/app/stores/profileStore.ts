@@ -8,6 +8,7 @@ export default class ProfileStore{
     loadingProfile = false;
     uploading = false;
     loading = false;
+    followings: Profile[] = [];
 
     constructor() {
         makeAutoObservable(this);
@@ -96,4 +97,51 @@ export default class ProfileStore{
             }
     }
     
+    updateFollowing = async (username: string, following: boolean) => {
+        this.loading = true;
+        try {
+            await agent.Profiles.updateFollowing(username);
+            store.activityStore.updateAttendeeFollowing(username);
+            runInAction(() => {
+                // Update the main profile
+                if (this.profile 
+                    && this.profile.userName !== store.userStore.user?.userName
+                    && this.profile.userName === username) {
+                    if (following) {
+                        this.profile.followersCount++;
+                    } else {
+                        this.profile.followersCount--;
+                    }
+                    this.profile.following = !this.profile.following;
+                }
+    
+                // Update current user's following count
+                if (this.profile && this.profile.userName === store.userStore.user?.userName) {
+                    if (following) {
+                        this.profile.followingCount++;
+                    } else {
+                        this.profile.followingCount--;
+                    }
+                }
+    
+                // Update followings list
+                this.followings.forEach(profile => {
+                    if (profile.userName === username) {
+                        if (following) {
+                            profile.followersCount++;
+                        } else {
+                            profile.followersCount--;
+                        }
+                        profile.following = !profile.following;
+                    }
+                })
+            });
+        } catch (error) {
+            console.log(error);
+        } finally {
+            runInAction(() => {
+                this.loading = false;
+            });
+        }
+    }
 }
