@@ -9,12 +9,16 @@ interface Props {
 }
 
 export default observer(function ProfileCard({ profile }: Props) {
+  function truncate(str: string | undefined, length: number): string {
+    if (!str) return "";
+    return str.length > length ? str.substring(0, length) + "..." : str;
+  }
   return (
     <Card as={Link} to={`/profiles/${profile.userName}`}>
       <Image src={profile.image || "/assets/user.png"} />
       <Card.Content>
         <Card.Header>{profile.displayName}</Card.Header>
-        <Card.Description>{profile.bio} Bio goes here</Card.Description>
+        <Card.Description>{truncate(profile.bio, 30)}</Card.Description>
       </Card.Content>
       <Card.Content extra>
         <Icon name="user" />

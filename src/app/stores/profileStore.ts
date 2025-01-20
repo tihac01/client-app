@@ -1,5 +1,5 @@
 import { makeAutoObservable, reaction, runInAction } from "mobx";
-import { Photo, Profile } from "../models/profile";
+import { Photo, Profile, UserActivity } from "../models/profile";
 import agent from "../api/agent";
 import { store } from "./sotre";
 
@@ -11,6 +11,8 @@ export default class ProfileStore{
     followings: Profile[] = [];
     loadingFollowings = false;
     activeTab = 0;
+    loadingActivities = false;
+    userActivities: UserActivity[] = [];
 
     constructor() {
         makeAutoObservable(this);
@@ -50,12 +52,44 @@ export default class ProfileStore{
                 this.loadingProfile = false;
             })
         }
-    } 
+    }
+
+    loadUserActivities = async (userName: string, predicate?: string) => {
+        this.loadingActivities = true 
+        try {
+            const userActivities = await agent.Profiles.listActivitiesForUser(userName, predicate!)
+            runInAction(() => this.userActivities = userActivities as UserActivity[])
+        } catch (error) {
+            console.log(error)
+        } finally{
+            runInAction(() => {
+                this.loadingActivities = false;
+            })
+        }
+    }
+
+    updateProfile = async (profile: Partial<Profile>) => {
+        this.loading = true;
+        try {
+            await agent.Profiles.updateProfile(profile);
+            runInAction(() => {
+                if (profile.displayName && profile.displayName !==
+                    store.userStore.user?.displayName) {
+                    store.userStore.setDisplayName(profile.displayName);
+                }
+                this.profile = { ...this.profile, ...profile as Profile };
+                this.loading = false;
+            })
+        } catch (error) {
+            console.log(error);
+            runInAction(() => this.loading = false);
+        }
+    }
 
     uploadPhoto = async (file: Blob) => {
     this.uploading = true
     try {
-        const response =await agent.Profiles.uploadPhoto(file);
+        const response = await agent.Profiles.uploadPhoto(file);
         const photo = response.data;
         runInAction(() => {
             if (this.profile) {
